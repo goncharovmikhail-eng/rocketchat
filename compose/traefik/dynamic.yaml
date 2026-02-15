@@ -1,0 +1,5 @@
+tls:
+  certificates:
+    - certFile: /certs/rocket.home.stage.crt
+      keyFile: /certs/rocket.home.stage.key
+
