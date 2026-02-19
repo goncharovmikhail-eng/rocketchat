@@ -5,6 +5,14 @@ services:
   traefik:
     image: traefik:v2.11
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rocketchat.rule=Host(`${ROCKETCHAT_DOMAIN}`)"
+      - "traefik.http.routers.rocketchat.entrypoints=websecure"
+      - "traefik.http.routers.rocketchat.tls=true"
+      - "traefik.http.services.rocketchat.loadbalancer.server.port=3000"
+      - "traefik.http.routers.rocketchat-http.entrypoints=web"
+      - "traefik.http.routers.rocketchat-http.rule=Host(`quickpick.coach`)"
     command:
       - "--providers.docker=true"
       - "--providers.file.directory=/certs"
@@ -47,7 +55,7 @@ services:
 
   rocketchat:
     platform: linux/amd64
-    image: rocketchat/rocket.chat:6.5.2
+    image: rocketchat/rocket.chat:7.13.3
     restart: unless-stopped
     depends_on:
       mongodb:
@@ -55,43 +63,43 @@ services:
     volumes:
       - "../rocketchat/data/uploads:/app/uploads"
     environment:
-      ROOT_URL: https://rocket.home.stage
+      ROOT_URL: https://quickpick.coach
       PORT: 3000
       MONGO_URL: mongodb://mongodb:27017/rocketchat?replicaSet=rs0
       MONGO_OPLOG_URL: mongodb://mongodb:27017/local?replicaSet=rs0
       DEPLOY_METHOD: docker
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.rocketchat.rule=Host(`rocket.home.stage`)"
+      - "traefik.http.routers.rocketchat.rule=Host(`${ROCKETCHAT_DOMAIN}`)" 
       - "traefik.http.routers.rocketchat.entrypoints=websecure"
       - "traefik.http.routers.rocketchat.tls=true"
       - "traefik.http.services.rocketchat.loadbalancer.server.port=3000"
     networks:
       - botnet
 
-  hubot:
-    platform: linux/amd64
-    image: rocketchat/hubot-rocketchat:latest
-    restart: unless-stopped
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    volumes:
-      - "../hubot/scripts:/home/hubot/scripts"
-    environment:
-      ROCKETCHAT_URL: rocketchat:3000
-      ROCKETCHAT_ROOM: GENERAL
-      ROCKETCHAT_USER: hubot
-      ROCKETCHAT_PASSWORD: ${HUBOT_ROCKETCHAT_PASSWORD:?HUBOT_ROCKETCHAT_PASSWORD must be set!}
-      BOT_NAME: bot
-    networks:
-      - botnet
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://rocketchat:3000/api/info || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
+        #hubot:
+    # platform: linux/amd64
+      # image: rocketchat/hubot-rocketchat:latest
+      # restart: unless-stopped
+      #   depends_on:
+      #  mongodb:
+        #   condition: service_healthy
+          # volumes:
+      #   - "../hubot/scripts:/home/hubot/scripts"
+        # environment:
+      #   ROCKETCHAT_URL: rocketchat:3000
+        #   ROCKETCHAT_ROOM: GENERAL
+        #  ROCKETCHAT_USER: hubot
+        #   ROCKETCHAT_PASSWORD: ${HUBOT_ROCKETCHAT_PASSWORD:?HUBOT_ROCKETCHAT_PASSWORD must be set!}
+        #  BOT_NAME: bot
+        #  networks:
+      #  - botnet
+        # healthcheck:
+      # test: ["CMD-SHELL", "curl -f http://rocketchat:3000/api/info || exit 1"]
+        #interval: 10s
+        # timeout: 5s
+        # retries: 5
+        #      start_period: 20s
 
 networks:
   botnet:

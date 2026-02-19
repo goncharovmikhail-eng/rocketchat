@@ -36,48 +36,40 @@ services:
       ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
       - mongodb-rocketchat:/bitnami/mongodb
+      - ./mongodb/init-users.js:/docker-entrypoint-initdb.d/init-users.js:ro
     networks:
       - botnet
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   rocketchat:
     platform: linux/amd64
-    image: rocketchat/rocket.chat:6.5.2
+    image: rocketchat/rocket.chat:7.3.0
     restart: unless-stopped
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     volumes:
       - "../rocketchat/data/uploads:/app/uploads"
     environment:
-      ROOT_URL: https://rocket.home.stage
+      ROOT_URL: "https://quickpick.coach"
       PORT: 3000
       MONGO_URL: mongodb://mongodb:27017/rocketchat?replicaSet=rs0
       MONGO_OPLOG_URL: mongodb://mongodb:27017/local?replicaSet=rs0
       DEPLOY_METHOD: docker
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.rocketchat.rule=Host(`rocket.home.stage`)"
+      - "traefik.http.routers.rocketchat.rule=Host(`quickpick.coach`)"
       - "traefik.http.routers.rocketchat.entrypoints=websecure"
       - "traefik.http.routers.rocketchat.tls=true"
       - "traefik.http.services.rocketchat.loadbalancer.server.port=3000"
     networks:
       - botnet
 
-  hubot:
-    platform: linux/amd64
-    image: rocketchat/hubot-rocketchat:latest
-    restart: unless-stopped
-    depends_on:
-      - rocketchat
-    volumes:
-      - "../hubot/scripts:/home/hubot/scripts"
-    environment:
-      ROCKETCHAT_URL: rocketchat:3000
-      ROCKETCHAT_ROOM: GENERAL
-      ROCKETCHAT_USER: hubot
-      ROCKETCHAT_PASSWORD: ${HUBOT_ROCKETCHAT_PASSWORD}
-      BOT_NAME: bot
-    networks:
-      - botnet
 
 networks:
   botnet:

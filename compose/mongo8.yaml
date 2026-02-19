@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  mongo8:
+    image: mongo:8.2
+    container_name: mongo8
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass
+    volumes:
+      - mongodb-rocketchat:/data/db
+
+volumes:
+  mongodb-rocketchat:
