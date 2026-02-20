@@ -21,18 +21,30 @@ services:
       - botnet
 
   mongodb:
+    # build:
+    # context: ../mongodb/docker
     image: mongo:8.2
     restart: unless-stopped
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    environment:
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_PORT_NUMBER: 27017
+      MONGODB_INITIAL_PRIMARY_HOST: mongodb
+      MONGODB_INITIAL_PRIMARY_PORT_NUMBER: 27017
+      MONGODB_ADVERTISED_HOSTNAME: mongodb
+      MONGODB_ENABLE_JOURNAL: "true"
+      ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
-      - mongodb-rocketchat:/data/db
+      - mongodb-rocketchat:/bitnami/mongodb
+        #- ./mongodb/init-users.js:/docker-entrypoint-initdb.d/init-users.js:ro
     networks:
       - botnet
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --quiet
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   rocketchat:
     platform: linux/amd64
