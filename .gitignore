@@ -7,6 +7,6 @@ compose/.env
 docker-compose.override.yaml
 *.tgz
 *.tar
-*.gz
+#*.gz
 compose/traefik/certs
 !mongodb/data_volume_image/mongodb-rocketchat.tgz
