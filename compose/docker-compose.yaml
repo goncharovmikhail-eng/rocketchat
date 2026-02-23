@@ -21,7 +21,7 @@ services:
       - botnet
 
   mongodb:
-    image: mongo_backup20.02
+    image: goncharovmikhail/private:mongo_backup
     #    image: mongo:8.2
     restart: unless-stopped
     command: ["--replSet", "rs0", "--bind_ip_all"]
